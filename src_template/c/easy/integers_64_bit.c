@@ -18,7 +18,7 @@
  * to return a 64-bit value without needing to use the stack. 
  * 
  * ================================================================ */
-
+#include "Common.h"
 u64 add_64(u64 a, u64 b) {
 }
 
@@ -78,8 +78,7 @@ u64 aligned_64(u32 a, u64 b) {
  * 
  * ================================================================ */
 
-u64 add_64(u64 a, u64 b) {
-}
+
 
 u32 add_64_downcast(u64 a, u64 b) {
 }

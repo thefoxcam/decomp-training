@@ -1,5 +1,6 @@
 
 // TODO(fox): Should the typedefs be used for long longs?
+#include "Common.h"
 
 u64 add_64(u64 a, u64 b) {
     return a + b;
@@ -9,9 +10,7 @@ u64 aligned_64(u32 a, u64 b) {
     return b + 5;
 }
 
-u64 add_64(u64 a, u64 b) {
-    return a + b;
-}
+
 
 u32 add_64_downcast(u64 a, u64 b) {
     return a + b;
