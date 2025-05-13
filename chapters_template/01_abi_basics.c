@@ -1,25 +1,39 @@
 /* ================================================================ *
  *
- **** ABI BASICS 
+ **** CHATPER 1 - ABI BASICS 
  *
- * In order for a piece of software to be able to run on
- * a given piece of hardware and/or interoperate with other pieces of
- * software on a system, there has to be a general agreement
- * as to how the software will interact with various aspects of 
- * the hardware. This is known as an *application binary interface*, or
- * ABI. For example, every library and function on the Gamecube/Wii
- * "agrees" that it will use a specific register to return values if
- * the function returns something, which you'll see in the first training
- * function. 
+ * This section will likely be dense and boring, but it will clear up
+ * a lot of uncertainties as to what is going on when you look at a
+ * block of assembly. The function implemenetations won't be provided
+ * this time (though many of the functions are identical to what
+ * you've already seen), so try and start writing them out to get it
+ * to match.
  *
- * An ABI close to the what the GC/Wii uses that is useful to 
+ * While the ISA describes many of the fundamental features and
+ * aspects of a target architecture, it doesn't perscribe how a given
+ * program should behave on a given target operating system. That
+ * instead is delegated to a specification called the *application
+ * binary interface* (ABI), which theoretically allows a program to
+ * interoperate with other programs on the system and be able to run
+ * on any computer with the OS and hardware it was compiled to run on.
+ * The compiler ultimately gets to define the "final ABI" that the
+ * program compiled on it uses, often being layered on top of a more
+ * general OS ABI, so you could hear phrases like "the Metrowerks C++
+ * ABI" or "the Linux ABI."
+ * 
+ * For example, every library and function compiled with a given
+ * compiler for the GC/Wii "agrees" that it will use a specific
+ * register to return values if the function returns something, which
+ * you'll see in the first training function. 
+ *
+ * An ABI similar to the what Metrowerks uses that is useful to 
  * reference is the System V PowerPC ABI, which can be found here:
  *
  * http://refspecs.linux-foundation.org/elf/elfspec_ppc.pdf
  *
- * In addition, since the GC/Wii is an embedded system, its CPU
- * also obeys a superset of the ABI known as an *embedded* application
- * binary interface*, or EABI, which can be viewed here:
+ * In addition, since the GC/Wii is an embedded system, it also obeys
+ * a superset of the ABI known as an *embedded* application binary
+ * interface*, or EABI, which can be viewed here:
  *
  * https://files.decomp.dev/E500ABIUG.pdf
  *
@@ -32,21 +46,21 @@
  *
  * Registers and parameters (Function Calling Sequence, ABI page 3-14)
  *
- * As you may be familiar with, the CPU has to move any data it wants
- * to operate on from main memory (RAM) into its own internal registers 
- * to be able to access it. Thus, an optimization most ABIs utilize
- * to reduce the amount of times a given function has to access RAM is
- * to allow registers themselves to be used as both function arguments
- * and return values. 
+ * As you may be familiar with from a computer architecture or
+ * assembly class, the CPU has to move any data it wants to operate on
+ * from main memory (RAM) into its own registers to be able to access
+ * it. Thus, an optimization most ABIs utilize to reduce the amount of
+ * times a given function has to access RAM is to allow registers
+ * themselves to be used as both function arguments and return values. 
  *
- * In the case of non-float values, up to eight general-purpose registers 
- * can used to pass arguments to a function, starting at GPR3 and ending
- * at GPR10. Additionally, GPR3 acts a return register that a callsite of
- * the function can read from. 
+ * In the case of non-float values, up to eight general-purpose
+ * registers can used to pass arguments to a function, starting at
+ * r3 and ending at r10. Additionally, r3 acts a return register
+ * that a callsite of the function can read from. 
  *
- * For example, to write a function add() that adds two inputted integers
- * together and returns the result, you simply have to add r3 and r4 
- * and store the result in r3.
+ * For example, to write a function add() that adds two integer
+ * arguments together and returns the result, you simply have to add
+ * r3 and r4 and store the result in r3.
  * 
  * ================================================================ */
 
@@ -56,12 +70,11 @@ int abi_function_1(int a, int b) {
 /* ================================================================ *
  * 
  * For floats, up to eight floating-point registers can be used,
- * starting at FPR1 and ending at FPR8. FPR1 also acts as the return
- * register. 
+ * starting at f1 and ending at f8. f1 also acts as the return register. 
  *
  * ================================================================ */
 
-int abi_function_2(int a, int b) {
+float abi_function_2(float a, float b) {
 }
 
 /* ================================================================ *
@@ -69,19 +82,19 @@ int abi_function_2(int a, int b) {
  * Volatile and non-volatile registers (Registers, ABI page 3-14)
  * 
  * The sets of registers used for function passing (r3-r8, f1-f8) are
- * also known as *volatile* registers, because whenever you branch into
- * a new function, the ABI allows the values in those registers to get
- * overwritten. In other words, any time you step over a "b some_func", 
- * you must assume that all volatile registers have effectively been
- * destroyed (or modified in the case of return registers). Thus 
- * the concept of "non-volatile" registers become useful, which allow
- * us to preserve data between registers that cross callsites without
- * having to read/write from main memory.
+ * also known as *volatile* registers, because whenever you branch
+ * into a new function, the ABI allows the values in those registers
+ * to get overwritten. In other words, any time you step over a "b
+ * some_func", you must assume that all volatile registers have
+ * effectively been destroyed (or modified in the case of return
+ * registers). Thus the concept of "non-volatile" registers become
+ * useful, which allow us to preserve data between registers that
+ * cross callsites without having to read/write from main memory.
  *
- * The simplest example of this behavior can be seen below, where
- * r3 is moved to the non-volatile register r31, since r3 can get
- * overwritten by some_func, which is then passed back to r3 to 
- * be used as the return register. The other instructions, which are
+ * The simplest example of this behavior can be seen below, where r3
+ * is moved to the non-volatile register r31, since r3 can get
+ * overwritten by some_func, which is then passed back to r3 to be
+ * used as the return register. The other instructions, which are
  * related to the stack, will be explained next.
  *
  * ================================================================ */
@@ -100,7 +113,9 @@ int abi_function_3(int a) {
  * "mflr" towards the top and a "mtlr" towards the bottom. These
  * opcodes all concern a special register called the *link register*,
  * which holds the memory address of the previous function that called
- * the function you're currently in. To explain it briefly:
+ * the function you're currently in. This was also explained in the
+ * intro doc, but to reiterate again to help make it stick in your
+ * brain more:
 
  * TODO(fox): the final file could have these be real addresses
  *
@@ -189,7 +204,7 @@ void abi_function_7(int a) {
  * However one case where the compiler won't do that is if you declare
  * a struct on the stack and you pass its address to a function, in
  * which case it always implements a real stack. Typically you'll see
- * this with math-related structs like Vec3 or Vec4 or Mtx.
+ * this with math-related structs like a Vec3 or Vec4 or Matrix struct.
  *
  * ================================================================ */
 

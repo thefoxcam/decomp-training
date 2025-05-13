@@ -1,4 +1,8 @@
 #include <Common.h>
+extern "C"
+{
+  #include "src/runtime/functions.h"
+}
 
 void *operator new( size_t size )
 {
@@ -20,5 +24,6 @@ static __Sample __sample;
 int main( void )
 {
     __sample._0 = 0xf3;
+    sample_funcs();
     return 0;
 }

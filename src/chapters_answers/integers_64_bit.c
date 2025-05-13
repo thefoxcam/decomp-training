@@ -1,7 +1,6 @@
+#include "src/runtime/platform.h"
 
-// TODO(fox): Should the typedefs be used for long longs?
-
-u64 add_64(u64 a, u64 b) {
+u64 example_64(u64 a, u64 b) {
     return a + b;
 }
 

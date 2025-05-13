@@ -3,7 +3,7 @@ int abi_function_1(int a, int b) {
     return a + b;
 }
 
-int abi_function_2(int a, int b) {
+float abi_function_2(float a, float b) {
     return a + b;
 }
 
