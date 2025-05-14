@@ -1,4 +1,5 @@
-#include "src/chapters_include/00_basic_assembly_and_isa.h"
+#include "src/chapters_answers/00_basic_assembly_and_isa.h"
+#include "src/chapters_answers/01_abi_basics.h"
 
 void chapter_0() {
     int a = 1;
@@ -20,6 +21,18 @@ void chapter_0() {
     addition_double(a_d, b_d);
     addition_double_load_store(&a_d, &b_d, &c_d);
     load_int();
+}
+
+void chapter_1() {
+    int b = 3;
+
+    abi_parameters(1, 2);
+    abi_float_parameters(0.1F, 0.2F);
+    abi_volatile_nonvolatile(4);
+    abi_func_call();
+    typical_stack_usage(2.0F);
+    weird_func(5);
+    call_weird_func(2, &b);
 }
 
 #if 0
@@ -48,5 +61,6 @@ void integers_64() {
 
 void sample_funcs() {
     chapter_0();
+    chapter_1();
     // integers_64();
 }

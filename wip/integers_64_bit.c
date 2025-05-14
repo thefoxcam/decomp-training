@@ -59,3 +59,40 @@ u64 or_64(u64 a, u64 b) {
 u64 xor_64(u64 a, u64 b) {
     return a ^ b;
 }
+
+#if 0
+// TODO(fox): This should probably be combined with the branching section
+
+int abi_function_6(int a) {
+    switch (a) {
+        case 1:
+            return 1;
+        case 2:
+            return 2;
+        case 3:
+            return 3;
+        case 4:
+            return 4;
+        case 5:
+            return 5;
+    }
+    return 0;
+}
+
+int abi_function_7(int a) {
+    some_func();
+    switch (a) {
+        case 1:
+            return 1;
+        case 2:
+            return 2;
+        case 3:
+            return 3;
+        case 4:
+            return 4;
+        case 5:
+            return 5;
+    }
+    return 0;
+}
+#endif

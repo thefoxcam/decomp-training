@@ -4,10 +4,9 @@
  *
  * This section will likely be dense and boring, but it will clear up
  * a lot of uncertainties as to what is going on when you look at a
- * block of assembly. The function implemenetations won't be provided
- * this time (though many of the functions are identical to what
- * you've already seen), so try and start writing them out to get it
- * to match.
+ * block of assembly. I'll start to not provide the solutions on some
+ * of the functions, so try to start matching the functions when
+ * they're empty.
  *
  * While the ISA describes many of the fundamental features and
  * aspects of a target architecture, it doesn't perscribe how a given
@@ -33,7 +32,7 @@
  *
  * In addition, since the GC/Wii is an embedded system, it also obeys
  * a superset of the ABI known as an *embedded* application binary
- * interface*, or EABI, which can be viewed here:
+ * interface, or EABI, which can be viewed here:
  *
  * https://files.decomp.dev/E500ABIUG.pdf
  *
@@ -41,6 +40,8 @@
  * and the EABI will use (EABI page #-#), 
  *
  * ================================================================ */
+
+#include "src/runtime/stuff.h"
 
 /* ================================================================ *
  *
@@ -64,7 +65,7 @@
  * 
  * ================================================================ */
 
-int abi_function_1(int a, int b) {
+int abi_parameters(int a, int b) {
 }
 
 /* ================================================================ *
@@ -74,7 +75,7 @@ int abi_function_1(int a, int b) {
  *
  * ================================================================ */
 
-float abi_function_2(float a, float b) {
+float abi_float_parameters(float a, float b) {
 }
 
 /* ================================================================ *
@@ -97,9 +98,14 @@ float abi_function_2(float a, float b) {
  * used as the return register. The other instructions, which are
  * related to the stack, will be explained next.
  *
+ * (note: some_func is defined outside this TU, its implementation is
+ * not important)
+ *
  * ================================================================ */
 
-int abi_function_3(int a) {
+int abi_volatile_nonvolatile(int a) {
+    some_func();
+    return a;
 }
 
 /* ================================================================ *
@@ -116,13 +122,10 @@ int abi_function_3(int a) {
  * the function you're currently in. This was also explained in the
  * intro doc, but to reiterate again to help make it stick in your
  * brain more:
-
- * TODO(fox): the final file could have these be real addresses
  *
  * | // some_func
- * | 0x80103F14 | add r3, r3, 0x5
  * | 0x80103F18 | blr
- *
+ * | 
  * | // a bunch of code
  * | 
  * | // abi_function_4
@@ -134,6 +137,8 @@ int abi_function_3(int a) {
  * | 0x802D8924 | addi r1, r1, 0x8
  * | 0x802D8918 | mtlr r0
  * | 0x802D891C | blr
+ *
+ * (note: addresses may be different from the actual executable)
  *
  * When the "bl 0x80103F14" instruction gets executed, the link
  * register (LR) is automatically set with the address of the next
@@ -168,30 +173,8 @@ int abi_function_3(int a) {
  *
  * ================================================================ */
 
-void abi_function_4(float a) {
-}
-
-// TODO(fox): This should probably be combined with the branching
-// section. This is a more complicated example than using a single
-// conditional, but I think the multiple branches illustrates the
-// point better.
-
-/* ================================================================ *
- *
- * Typically when a function has early returns, such as the cases in
- * this switch statement in abi_function_6, they will branch to the
- * epilogue. However if a function doesn't use the stack, the epilogue
- * effectively turns into a single blr instruction. In this case, the
- * compiler can perform an optimization where it replaces those
- * epilogue branches with the epilogue itself and create multiple blrs
- * in a single function.
- *
- * ================================================================ */
-
-void abi_function_6(int a) {
-}
-
-void abi_function_7(int a) {
+void abi_func_call(float a) {
+    some_func();
 }
 
 /* ================================================================ *
@@ -208,6 +191,48 @@ void abi_function_7(int a) {
  *
  * ================================================================ */
 
-void abi_function_5(float a) {
+void typical_stack_usage(float a) {
+    Vec3 pos;
+    pos.x = a;
+    pos.y = a;
+    pos.z = a;
+    some_func_vec3(&pos);
 }
+
+/* ================================================================ *
+ *
+ * Here is your first "real" problem without an explanation and
+ * without the return or input types provided (you'll have to modify
+ * the accompanying .h file as well). It's a bit tricky, but with the
+ * knowledge you now have, you should be equipped to tackle and
+ * understand what at first glance looks like a strange peculiarity.
+ * Uncomment the functions and pretend that "weird_func" is in another
+ * TU; don't remove the pragma statements (it's the same trick from
+ * the intro article to make it not automatically get inlined by the
+ * compiler).
+ *
+ * View the solution here if you get stuck or figure it out; it
+ * contains an important explanation as well:
+ *
+ * https://wiki.decomp.dev/en/resources/decomp-training-answers/chapter_01
+ *
+ * ================================================================ */
+
+
+/*
+??? weird_func(???) {
+    ??? 
+}
+
+??? call_weird_func(???) {
+    ??? 
+}
+*/
+
+/* ================================================================ *
+ * 
+ * End of chapter 1.
+ * 
+ * ================================================================ */
+
 

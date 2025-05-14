@@ -1,10 +1,6 @@
 /* ================================================================ *
  *
- **** 64-BIT INTEGERS
- *
- * Integers of type "long long," aka an integer that takes up 8 bytes,
- * or 64 bits, have to be implemented a bit specially since GPRs on 
- * the GC/Wii are only 32 bits long:
+ **** 64-BIT INTEGERS (WIP)
  *
  * ================================================================ */
 
@@ -14,6 +10,10 @@
  *
  * Register usage
  *
+ * Integers of type "long long," aka an integer that takes up 8 bytes,
+ * or 64 bits, have to be implemented a bit specially since GPRs on 
+ * the GC/Wii are only 32 bits long.
+ * 
  * Each 64-bit value occupies two general-purpose registers. When
  * passed into a function, it simply occupies two continuous registers.
  * Additionally, r4 can be used in conjunction with r3 as a return value
@@ -159,3 +159,31 @@ u64 xor_64(u64 a, u64 b) {
  * ================================================================ */
 
 // TODO(fox): implement
+
+
+
+// MISC
+
+// TODO(fox): This should probably be combined with the branching
+// section. This is a more complicated example than using a single
+// conditional, but I think the multiple branches illustrates the
+// point better.
+
+/* ================================================================ *
+ *
+ * Typically when a function has early returns, such as the cases in
+ * this switch statement in abi_function_6, they will branch to the
+ * epilogue. However if a function doesn't use the stack, the epilogue
+ * effectively turns into a single blr instruction. In this case, the
+ * compiler can perform an optimization where it replaces those
+ * epilogue branches with the epilogue itself and create multiple blrs
+ * in a single function.
+ *
+ * ================================================================ */
+
+void abi_function_6(int a) {
+}
+
+void abi_function_7(int a) {
+}
+

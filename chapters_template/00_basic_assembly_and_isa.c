@@ -49,6 +49,8 @@
  * 
  * ================================================================ */
 
+#include "src/chapters_answers/00_basic_assembly_and_isa.h"
+
 int addition(int a, int b) {
     return a + b;
 }
@@ -87,10 +89,18 @@ int load() {
 
 /* ================================================================ *
  *
- * If you're a bit shaky on how pointers work, now is a good time to
- * refresh yourself. The contents of r0, which is the number 7, is
- * being written to the memory address which is derived from the
- * contents of r3, plus an optional offset.
+ * The first thing you should do if you get disoriented when looking
+ * at general-purpose register and you don't know what it's doing is
+ * to verify whether it's a pointer or not. If you're a bit shaky on
+ * how pointers work, now is a good time to watch a video or something
+ * to refresh yourself. 
+ * 
+ * Basically, if you see a register that appears to the right of a
+ * series of parenthesis in a store or load instruction, like the
+ * 0x0(r3) and 0x4(r3) here, that register is guaranteed to be a
+ * pointer. The contents of r0, which is the number 7, is being
+ * written to the memory address which is derived from the contents of
+ * r3, plus an optional offset.
  * 
  * ================================================================ */
 
