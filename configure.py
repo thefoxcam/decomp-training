@@ -3,19 +3,40 @@ import glob
 import io
 import os
 import json
-from vendor.ninja_syntax import Writer
-from typing import Any
+import sys
+import platform
+from tools.ninja_syntax import Writer, serialize_path
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+
+binutils_tag = "2.42-1"
+compilers_tag = "20250513"
+dtk_tag = "v1.0.0" # currently unused?
+objdiff_tag = "v2.7.1"
+sjiswrap_tag = "v1.1.1"
+wibo_tag = "0.6.11"
+
+linker_version = "GC/3.0a5.2"
 
 target_src_dir = "training_answers"
 base_src_dir = "training_template"
 
-builddir = "build"
-outdir = "build"
+tools_dir = Path("tools")
+build_dir = Path("build")
+out_dir = "build"
 
-target_builddir = os.path.join(builddir, "target")
-target_outdir = os.path.join(outdir, "target")
-base_builddir = os.path.join(builddir, "base")
-base_outdir = os.path.join(outdir, "base")
+target_build_dir = os.path.join(build_dir, "src", "target")
+target_out_dir = os.path.join(out_dir, "src", "target")
+base_build_dir = os.path.join(build_dir, "src", "base")
+base_out_dir = os.path.join(out_dir, "src", "base")
+
+def is_windows() -> bool:
+    return os.name == "nt"
+
+# On Windows, we need this to use && in commands
+CHAIN = "cmd /c " if is_windows() else ""
+# Native executable extension
+EXE = ".exe" if is_windows() else ""
 
 # TODO: Debug?
 RELEASE_MWCC_FLAGS = [
@@ -53,7 +74,7 @@ RELEASE_MWLD_FLAGS = [
     "-nodefaults",
     "-mapunused",
     "-listclosure",
-    "-lcf " + os.path.join("$builddir", "ldscript.lcf"),
+    "-lcf " + os.path.join("$build_dir", "ldscript.lcf"),
 ]
 
 class BuildObject:
@@ -147,13 +168,13 @@ def write_objdiff(build_objects: list) -> None:
             else:
                 unit_config = {
                   "name": build_object.file_path,
-                  "target_path": os.path.join(target_builddir, build_object.target_obj),
-                  "base_path": os.path.join(base_builddir, build_object.base_obj),
+                  "target_path": os.path.join(target_build_dir, build_object.target_obj),
+                  "base_path": os.path.join(base_build_dir, build_object.base_obj),
                   "scratch": {
                     "platform": "gc_wii",
                     "compiler": compiler_version,
                     "c_flags": " ".join(BASE_MWCC_FLAGS),
-                    "ctx_path": os.path.join(base_builddir, build_object.target_obj),
+                    "ctx_path": os.path.join(base_build_dir, build_object.target_obj),
                     "build_ctx": True
                   },
                   "metadata": {
@@ -180,41 +201,168 @@ n = Writer(out_buf)
 n.variable("ninja_required_version", "1.3")
 n.newline()
 
-n.variable("builddir", builddir)
-n.variable("outdir", outdir)
+n.variable("build_dir", build_dir)
+n.variable("out_dir", out_dir)
 n.newline()
-n.variable("target_builddir", target_builddir)
-n.variable("target_outdir", target_outdir)
-n.variable("base_builddir", base_builddir)
-n.variable("base_outdir", base_outdir)
+n.variable("target_build_dir", target_build_dir)
+n.variable("target_out_dir", target_out_dir)
+n.variable("base_build_dir", base_build_dir)
+n.variable("base_out_dir", base_out_dir)
 n.newline()
 
+n.variable("mw_version", Path(linker_version))
 
-# TODO: The non-Windows people aren't gonna be happy about this one
-# NOTE: Perhaps DDD has the answer to this
-n.variable("compiler", os.path.join("$builddir", "compiler", "mwcceppc.exe"))
-n.variable("linker", os.path.join("$builddir", "compiler", "mwldeppc.exe"))
-n.variable("dtk", os.path.join("$builddir", "dtk.exe"))
+# The command line args and the ability to pass in an executable/compiler
+# folder could be added if needed.
+
+###
+# Tooling
+###
+n.comment("Tooling")
+
+build_tools_path = build_dir / "tools"
+
+download_tool = tools_dir / "download_tool.py"
+n.rule(
+    name="download_tool",
+    command=f"$python {download_tool} $tool $out --tag $tag",
+    description="TOOL $out",
+)
+
+dtk = build_tools_path / f"dtk{EXE}"
+n.build(
+    outputs=dtk,
+    rule="download_tool",
+    implicit=download_tool,
+    variables={
+        "tool": "dtk",
+        "tag": dtk_tag,
+    },
+)
+
+objdiff = build_tools_path / f"objdiff-cli{EXE}"
+n.build(
+    outputs=objdiff,
+    rule="download_tool",
+    implicit=download_tool,
+    variables={
+        "tool": "objdiff-cli",
+        "tag": objdiff_tag,
+    },
+)
+
+sjiswrap = build_tools_path / "sjiswrap.exe"
+n.build(
+    outputs=sjiswrap,
+    rule="download_tool",
+    implicit=download_tool,
+    variables={
+        "tool": "sjiswrap",
+        "tag": sjiswrap_tag,
+    },
+)
+
+# Only add an implicit dependency on wibo if we download it
+wrapper = None
+wrapper_implicit: Optional[Path] = None
+if (
+    wibo_tag is not None
+    and sys.platform == "linux"
+    and platform.machine() in ("i386", "x86_64")
+):
+    wrapper = build_tools_path / "wibo"
+    wrapper_implicit = wrapper
+    n.build(
+        outputs=wrapper,
+        rule="download_tool",
+        implicit=download_tool,
+        variables={
+            "tool": "wibo",
+            "tag": wibo_tag,
+        },
+    )
+if not is_windows() and wrapper is None:
+    wrapper = Path("wine")
+wrapper_cmd = f"{wrapper} " if wrapper else ""
+
+compilers = build_dir / "compilers"
+compilers_implicit = compilers
+n.build(
+    outputs=compilers,
+    rule="download_tool",
+    implicit=download_tool,
+    variables={
+        "tool": "compilers",
+        "tag": compilers_tag,
+    },
+)
+
+binutils = build_dir / "binutils"
+binutils_implicit = binutils
+n.build(
+    outputs=binutils,
+    rule="download_tool",
+    implicit=download_tool,
+    variables={
+        "tool": "binutils",
+        "tag": binutils_tag,
+    },
+)
+
+n.newline()
+
+###
+# Helper rule for downloading all tools
+###
+n.comment("Download all tools")
+n.build(
+    outputs="tools",
+    rule="phony",
+    inputs=[dtk, sjiswrap, wrapper, compilers, binutils, objdiff],
+)
+n.newline()
+
+###
+# Build rules
+###
+
+compiler_path = compilers / "$mw_version"
+
+# MWCC
+mwcc = compiler_path / "mwcceppc.exe"
+mwcc_cmd = f"{wrapper_cmd}{mwcc} $cflags -MMD -c $in -o $basedir"
+
+mwld = compiler_path / "mwldeppc.exe"
+mwld_cmd = f"{wrapper_cmd}{mwld} $ldflags -o $out @$out.rsp"
+
 n.newline()
 
 n.rule(
     "mwcc",
-    command="$compiler $cflags -MMD -c $in -o $basedir",
+    command=mwcc_cmd,
     description="MWCC $out",
     depfile="$out.d",
     deps="gcc",
 )
 n.rule(
     "mwld",
-    command="$linker $ldflags -o $out @$out.rsp",
+    command=mwld_cmd,
     description="MWLD $out",
     rspfile="$out.rsp",
     rspfile_content="$in_newline",
 )
-n.rule("dol", command="$dtk elf2dol $in $out", description="DOL $out")
 
-def write_build_object(out_files: list, in_file: str, input_builddir: str, mwcc_flags: list):
-    out_file = os.path.join(f"${input_builddir}", os.path.splitext(in_file)[0] + ".o")
+n.comment("Generate DOL")
+n.rule(
+    name="elf2dol",
+    command=f"{dtk} elf2dol $in $out",
+    description="DOL $out",
+)
+n.newline()
+
+
+def write_build_object(out_files: list, in_file: str, input_build_dir: str, mwcc_flags: list):
+    out_file = os.path.join(f"${input_build_dir}", os.path.splitext(in_file)[0] + ".o")
     out_files.append(out_file)
 
     n.build(
@@ -223,33 +371,33 @@ def write_build_object(out_files: list, in_file: str, input_builddir: str, mwcc_
         inputs=os.path.join("src", in_file),
         variables={
             "cflags": " ".join(mwcc_flags),
-            "basedir": os.path.join(f"${input_builddir}", os.path.dirname(in_file)),
+            "basedir": os.path.join(f"${input_build_dir}", os.path.dirname(in_file)),
         },
     )
 
-def write_link(out_files: list, input_outdir: str):
+def write_link(out_files: list, input_out_dir: str):
     n.build(
-        outputs=os.path.join(f"${input_outdir}", "main.elf"),
+        outputs=os.path.join(f"${input_out_dir}", "main.elf"),
         rule="mwld",
         inputs=out_files,
         variables={"ldflags": " ".join(RELEASE_MWLD_FLAGS)},
     )
     
     n.build(
-        outputs=os.path.join(f"${input_outdir}", "main.dol"),
-        rule="dol",
-        inputs=os.path.join(f"${input_outdir}", "main.elf"),
+        outputs=os.path.join(f"${input_out_dir}", "main.dol"),
+        rule="elf2dol",
+        inputs=os.path.join(f"${input_out_dir}", "main.elf"),
     )
 
 target_out_files = []
 base_out_files = []
 
 for build_object in build_objects:
-    write_build_object(target_out_files, build_object.target_path, "target_builddir", TARGET_MWCC_FLAGS)
-    write_build_object(base_out_files, build_object.base_path, "base_builddir", BASE_MWCC_FLAGS)
+    write_build_object(target_out_files, build_object.target_path, "target_build_dir", TARGET_MWCC_FLAGS)
+    write_build_object(base_out_files, build_object.base_path, "base_build_dir", BASE_MWCC_FLAGS)
 
-write_link(target_out_files, "target_outdir")
-write_link(base_out_files, "base_outdir")
+write_link(target_out_files, "target_out_dir")
+write_link(base_out_files, "base_out_dir")
 
 write_objdiff(build_objects)
 
