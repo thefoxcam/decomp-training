@@ -9,7 +9,7 @@
  * they're empty.
  *
  * While the ISA describes many of the fundamental features and
- * aspects of a target architecture, it doesn't perscribe how a given
+ * aspects of a target architecture, it doesn't prescribe how a given
  * program should behave on a given target operating system. That
  * instead is delegated to a specification called the *application
  * binary interface* (ABI), which theoretically allows a program to
@@ -22,8 +22,8 @@
  * 
  * For example, every library and function compiled with a given
  * compiler for the GC/Wii "agrees" that it will use a specific
- * register to return values if the function returns something, which
- * you'll see in the first training function. 
+ * register to return values if the function returns something (r3),
+ * which you'll see in the first training function. 
  *
  * An ABI similar to the what Metrowerks uses that is useful to 
  * reference is the System V PowerPC ABI, which can be found here:
@@ -62,7 +62,7 @@
  * For example, to write a function add() that adds two integer
  * arguments together and returns the result, you simply have to add
  * r3 and r4 and store the result in r3.
- * 
+ *
  * ================================================================ */
 
 int abi_parameters(int a, int b) {
@@ -88,18 +88,18 @@ float abi_float_parameters(float a, float b) {
  * to get overwritten. In other words, any time you step over a "b
  * some_func", you must assume that all volatile registers have
  * effectively been destroyed (or modified in the case of return
- * registers). Thus the concept of "non-volatile" registers become
- * useful, which allow us to preserve data between registers that
+ * registers). Thus the concept of "non-volatile" registers becomes
+ * useful, which allows us to preserve data between registers that
  * cross callsites without having to read/write from main memory.
  *
- * The simplest example of this behavior can be seen below, where r3
- * is moved to the non-volatile register r31, since r3 can get
- * overwritten by some_func, which is then passed back to r3 to be
- * used as the return register. The other instructions, which are
- * related to the stack, will be explained next.
+ * The simplest example of this behavior can be seen in the `mr r31,
+ * r3` below, where r3 is moved to the non-volatile register r31,
+ * since r3 can get overwritten by some_func [1]. r31 is then passed back
+ * to r3 to be used as the return register. The other instructions,
+ * which are related to the stack, will be explained next.
  *
- * (note: some_func is defined outside this TU, its implementation is
- * not important)
+ * [1] some_func is defined outside this TU, and its implementation is
+ * not important for this discussion.
  *
  * ================================================================ */
 
@@ -160,16 +160,18 @@ int abi_volatile_nonvolatile(int a) {
  * r0, which is then stored in what is known as the "stack" in the
  * "stw". Note that r1 is a special register which holds the stack
  * pointer, and its current value is required to be decremented and
- * placed on the stack (in the "stwu"), which you can read more about
- * on 3-34 of the ABI doc. Then in the epilogue, that address is
- * loaded out from the stack back into r0 and moved back into the LR
- * in the "lwz" and "mtlr" instructions, which allows the "blr" to
- * successfully return to "abi_function_4"'s caller. 
+ * placed on the stack (in the "stwu"). Then in the epilogue, that
+ * address is loaded out from the stack back into r0 and moved back
+ * into the LR in the "lwz" and "mtlr" instructions, which allows the
+ * "blr" to successfully return to "abi_function_4"'s caller. [1]
  *
  * The reason "mflr" and "mtlr" don't show up in every function, as
  * you may be able to guess, is that a function doesn't need to save
  * and restore the LR unless it actually needs to (i.e. it calls a
  * function), which is why some_func doesn't have them. 
+ *
+ * [1] You can read more about the stack setup on section 3-34 of the
+ * ABI doc.
  *
  * ================================================================ */
 
@@ -218,6 +220,8 @@ void typical_stack_usage(float a) {
  *
  * ================================================================ */
 
+#pragma push
+#pragma dont_inline on
 
 /*
 ??? weird_func(???) {
@@ -228,6 +232,8 @@ void typical_stack_usage(float a) {
     ??? 
 }
 */
+
+#pragma pop
 
 /* ================================================================ *
  * 

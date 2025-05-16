@@ -25,6 +25,8 @@ void typical_stack_usage(float a) {
     some_func_vec3(&pos);
 }
 
+#pragma push
+#pragma dont_inline on
 int weird_func(int a) {
     return a;
 }
@@ -32,4 +34,4 @@ int weird_func(int a) {
 void call_weird_func(int a, int *b) {
     *b = weird_func(a);
 }
-
+#pragma pop
