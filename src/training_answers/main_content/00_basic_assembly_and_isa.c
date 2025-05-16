@@ -1,4 +1,4 @@
-#include "src/chapters_answers/00_basic_assembly_and_isa.h"
+#include "00_basic_assembly_and_isa.h"
 
 int addition(int a, int b) {
     return a + b;
@@ -6,6 +6,18 @@ int addition(int a, int b) {
 
 int addition_with_immediate(int a) {
     return a + 7;
+}
+
+int subtraction(int a, int b) {
+    return a - b;
+}
+
+int multiplication(int a, int b) {
+    return a * b;
+}
+
+int division(int a, int b) {
+    return a / b;
 }
 
 int load() {

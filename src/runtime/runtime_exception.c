@@ -1,4 +1,4 @@
-#include <runtime/runtime_exception.h>
+#include <runtime_exception.h>
 
 /* ================================ *
  *     global_destructor_chain.c

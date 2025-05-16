@@ -38,6 +38,8 @@
 
  * ================================================================ */
 
+#include "00_basic_assembly_and_isa.h"
+
 /* ================================================================ *
  *
  * The simplest instruction to consider is `add RT, RA, RB`, as all it
@@ -49,10 +51,8 @@
  * 
  * ================================================================ */
 
-#include "src/chapters_answers/00_basic_assembly_and_isa.h"
-
 int addition(int a, int b) {
-    return a + b;
+    // return a + b;
 }
 
 /* ================================================================ *
@@ -63,7 +63,26 @@ int addition(int a, int b) {
  * ================================================================ */
 
 int addition_with_immediate(int a) {
-    return a + 7;
+    // return a + 7;
+}
+
+/* ================================================================ *
+ *
+ * Here are some other arithmetic operations that compile to 
+ * simple assembly:
+ * 
+ * ================================================================ */
+
+int subtraction(int a, int b) {
+    // return a - b;
+}
+
+int multiplication(int a, int b) {
+    // return a * b;
+}
+
+int division(int a, int b) {
+    // return a / b;
 }
 
 /* ================================================================ *
@@ -84,7 +103,7 @@ int addition_with_immediate(int a) {
  * ================================================================ */
 
 int load() {
-    return 7;
+    // return 7;
 }
 
 /* ================================================================ *
@@ -105,11 +124,11 @@ int load() {
  * ================================================================ */
 
 int store(int *a) {
-    *a = 7;
+    // *a = 7;
 }
 
 int store_offset(int *a) {
-    a[1] = 7;
+    // a[1] = 7;
 }
 
 /* ================================================================ *
@@ -137,19 +156,19 @@ int store_offset(int *a) {
  * ================================================================ */
 
 float addition_float(float a, float b) {
-    return a + b;
+    // return a + b;
 }
 
 void addition_float_load_store(float *a, float *b, float *c) {
-    *c = *a + *b;
+    // *c = *a + *b;
 }
 
 double addition_double(double a, double b) {
-    return a + b;
+    // return a + b;
 }
 
 void addition_double_load_store(double *a, double *b, double *c) {
-    *c = *a + *b;
+    // *c = *a + *b;
 }
 
 /* ================================================================ *
@@ -165,7 +184,7 @@ void addition_double_load_store(double *a, double *b, double *c) {
 int some_int = 21;
 
 int load_int() {
-    return some_int;
+    // return some_int;
 }
 
 /* ================================================================ *

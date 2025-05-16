@@ -5,7 +5,9 @@
 
 int addition(int a, int b);
 int addition_with_immediate(int a);
-int load();
+int subtraction(int a, int b);
+int multiplication(int a, int b);
+int division(int a, int b);
 int store(int *a);
 int store_offset(int *a);
 float addition_float(float a, float b);

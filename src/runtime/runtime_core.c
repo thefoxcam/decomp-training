@@ -1,5 +1,5 @@
-#include <runtime/runtime_core.h>
-#include <runtime/runtime_exception.h>
+#include <runtime_core.h>
+#include <runtime_exception.h>
 
 int main( int argc, char **argv );
 

@@ -1,4 +1,4 @@
-#include "src/runtime/stuff.h"
+#include "stuff.h"
 
 int abi_parameters(int a, int b) {
     return a + b;

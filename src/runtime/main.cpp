@@ -1,7 +1,7 @@
 #include <Common.h>
 extern "C"
 {
-  #include "src/runtime/functions.h"
+  #include "sample_functions.h"
 }
 
 void *operator new( size_t size )

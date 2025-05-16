@@ -1,6 +1,7 @@
-#include "src/chapters_answers/00_basic_assembly_and_isa.h"
-#include "src/chapters_answers/01_abi_basics.h"
+#include "00_basic_assembly_and_isa.h"
+#include "01_abi_basics.h"
 
+#if 0
 void chapter_0() {
     int a = 1;
     int b = 1;
@@ -35,7 +36,6 @@ void chapter_1() {
     call_weird_func(2, &b);
 }
 
-#if 0
 void integers_64() {
     u64 a_64 = 1;
     u64 b_64 = 1;
@@ -60,7 +60,7 @@ void integers_64() {
 #endif
 
 void sample_funcs() {
-    chapter_0();
-    chapter_1();
+    // chapter_0();
+    // chapter_1();
     // integers_64();
 }
