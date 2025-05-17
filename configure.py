@@ -331,9 +331,11 @@ compiler_path = compilers / "$mw_version"
 # MWCC
 mwcc = compiler_path / "mwcceppc.exe"
 mwcc_cmd = f"{wrapper_cmd}{mwcc} $cflags -MMD -c $in -o $basedir"
+mwcc_implicit: List[Optional[Path]] = [compilers_implicit or mwcc, wrapper_implicit]
 
 mwld = compiler_path / "mwldeppc.exe"
 mwld_cmd = f"{wrapper_cmd}{mwld} $ldflags -o $out @$out.rsp"
+mwld_implicit: List[Optional[Path]] = [compilers_implicit or mwld, wrapper_implicit]
 
 n.newline()
 
@@ -373,6 +375,7 @@ def write_build_object(out_files: list, in_file: str, input_build_dir: str, mwcc
             "cflags": " ".join(mwcc_flags),
             "basedir": os.path.join(f"${input_build_dir}", os.path.dirname(in_file)),
         },
+        implicit=mwcc_implicit,
     )
 
 def write_link(out_files: list, input_out_dir: str):
@@ -381,12 +384,14 @@ def write_link(out_files: list, input_out_dir: str):
         rule="mwld",
         inputs=out_files,
         variables={"ldflags": " ".join(RELEASE_MWLD_FLAGS)},
+        implicit=mwld_implicit,
     )
     
     n.build(
         outputs=os.path.join(f"${input_out_dir}", "main.dol"),
         rule="elf2dol",
         inputs=os.path.join(f"${input_out_dir}", "main.elf"),
+        implicit=dtk,
     )
 
 target_out_files = []
