@@ -46,11 +46,9 @@ RELEASE_MWCC_FLAGS = [
     "-proc gekko",
     "-align powerpc",
     "-enum int",
-    "-enc SJIS",
     "-fp hardware",
     "-Cpp_exceptions off",
     '-pragma "cats off"',
-    "-ipa file",
     "-opt all",
     "-inline auto",
     # User
@@ -93,7 +91,7 @@ class BuildObject:
             self.target_obj = self.name + ".o"
             self.base_obj = self.name + ".o"
         self.options: Dict[str, Any] = {
-            "mw_version": "GC/3.0a5.2",
+            "mw_version": "GC/1.2.5n",
         }
 
 build_objects = [
@@ -362,8 +360,8 @@ n.rule(
 )
 n.newline()
 
-
-def write_build_object(out_files: list, in_file: str, input_build_dir: str, mwcc_flags: list):
+# TODO: this signature is pretty bad
+def write_build_object(out_files: list, in_file: str, input_build_dir: str, mwcc_flags: list, options: Dict[str, Any]):
     out_file = os.path.join(f"${input_build_dir}", os.path.splitext(in_file)[0] + ".o")
     out_files.append(out_file)
 
@@ -374,6 +372,7 @@ def write_build_object(out_files: list, in_file: str, input_build_dir: str, mwcc
         variables={
             "cflags": " ".join(mwcc_flags),
             "basedir": os.path.join(f"${input_build_dir}", os.path.dirname(in_file)),
+            "mw_version": options["mw_version"]
         },
         implicit=mwcc_implicit,
     )
@@ -398,8 +397,8 @@ target_out_files = []
 base_out_files = []
 
 for build_object in build_objects:
-    write_build_object(target_out_files, build_object.target_path, "target_build_dir", TARGET_MWCC_FLAGS)
-    write_build_object(base_out_files, build_object.base_path, "base_build_dir", BASE_MWCC_FLAGS)
+    write_build_object(target_out_files, build_object.target_path, "target_build_dir", TARGET_MWCC_FLAGS, build_object.options)
+    write_build_object(base_out_files, build_object.base_path, "base_build_dir", BASE_MWCC_FLAGS, build_object.options)
 
 write_link(target_out_files, "target_out_dir")
 write_link(base_out_files, "base_out_dir")

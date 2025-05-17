@@ -128,7 +128,7 @@ int abi_volatile_nonvolatile(int a) {
  * | 
  * | // a bunch of code
  * | 
- * | // abi_function_4
+ * | // abi_func_call
  * | 0x802D8910 | mflr r0
  * | 0x802D8914 | stw r0, 0x4(r1)
  * | 0x802D8918 | stwu r1, -0x8(r1)
@@ -145,11 +145,11 @@ int abi_volatile_nonvolatile(int a) {
  * instruction at 0x802D8920, which is "lwz r0, 0xc(r1)". Then once it
  * hits the blr in "some_func" at 0x80103F18, it branches to the value
  * at the LR (0x802D8920) and resumes where it left off in
- * "abi_function_4."
+ * "abi_func_call."
  *
  * However you may be wondering, if the LR gets overwritten by the "bl
- * 0x80103F14" in "abi_function_4," then what will happen to the LR
- * that "abi_function_4" is currently holding? It won't be able to
+ * 0x80103F14" in "abi_func_call," then what will happen to the LR
+ * that "abi_func_call" is currently holding? It won't be able to
  * return to the function that's calling itself when it executes its
  * "blr" if its LR gets overwritten! Luckily, that problem is exactly
  * what all of the other instructions are addressing, which are a part
@@ -163,7 +163,7 @@ int abi_volatile_nonvolatile(int a) {
  * placed on the stack (in the "stwu"). Then in the epilogue, that
  * address is loaded out from the stack back into r0 and moved back
  * into the LR in the "lwz" and "mtlr" instructions, which allows the
- * "blr" to successfully return to "abi_function_4"'s caller. [1]
+ * "blr" to successfully return to "abi_func_call"'s caller. [1]
  *
  * The reason "mflr" and "mtlr" don't show up in every function, as
  * you may be able to guess, is that a function doesn't need to save
@@ -175,7 +175,7 @@ int abi_volatile_nonvolatile(int a) {
  *
  * ================================================================ */
 
-void abi_func_call(float a) {
+void abi_func_call(int a) {
     // some_func();
 }
 
@@ -203,18 +203,17 @@ void typical_stack_usage(float a) {
 
 /* ================================================================ *
  *
- * Here is your first "real" problem without an explanation and
- * without the return or input types provided (you'll have to modify
- * the accompanying .h file as well). It's a bit tricky, but with the
- * knowledge you now have, you should be equipped to tackle and
- * understand what at first glance looks like a strange peculiarity.
- * Uncomment the functions and pretend that "weird_func" is in another
- * TU; don't remove the pragma statements (it's the same trick from
- * the intro article to make it not automatically get inlined by the
- * compiler).
+ * Here is your first "real" problem without an explanation. It's a
+ * bit tricky, but with the knowledge you now have, you should be
+ * equipped to tackle and understand what at first glance looks like a
+ * strange peculiarity. Pretend that "weird_func" is in another TU and
+ * figure out why the first two functions match but the second one
+ * doesn't. Don't remove the pragma statements (it's the same trick
+ * from the intro article to make it not automatically get inlined by
+ * the compiler).
  *
- * View the solution here if you get stuck or figure it out; it
- * contains an important explanation as well:
+ * View the solution here if you need hints, get stuck, or figure it
+ * out; it contains an important explanation as well:
  *
  * https://wiki.decomp.dev/en/resources/decomp-training-answers/chapter_01
  *
@@ -223,15 +222,17 @@ void typical_stack_usage(float a) {
 #pragma push
 #pragma dont_inline on
 
-/*
-??? weird_func(???) {
-    ??? 
+int weird_func(void) {
 }
 
-??? call_weird_func(???) {
-    ??? 
+void call_weird_func(int a, int *b) {
+    *b = weird_func();
 }
-*/
+
+void call_weird_func_2(int a, int *b) {
+    a = a + 2;
+    *b = weird_func();
+}
 
 #pragma pop
 
