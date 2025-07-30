@@ -279,7 +279,9 @@ if (
             "tag": wibo_tag,
         },
     )
+using_wine = False
 if not is_windows() and wrapper is None:
+    using_wine = True
     wrapper = Path("wine")
 wrapper_cmd = f"{wrapper} " if wrapper else ""
 
@@ -312,11 +314,15 @@ n.newline()
 ###
 # Helper rule for downloading all tools
 ###
+tools_inputs = [dtk, sjiswrap, compilers, binutils, objdiff]
+if using_wine is False:
+    tools_inputs.append(wrapper)
+
 n.comment("Download all tools")
 n.build(
     outputs="tools",
     rule="phony",
-    inputs=[dtk, sjiswrap, wrapper, compilers, binutils, objdiff],
+    inputs=tools_inputs,
 )
 n.newline()
 
