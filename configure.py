@@ -178,7 +178,7 @@ def write_objdiff(build_objects: list) -> None:
                   "metadata": {
                     "complete": False,
                     "reverse_fn_order": False,
-                    "source_path": os.path.join("src", build_object.target_path),
+                    "source_path": os.path.join("src", build_object.base_path),
                     "auto_generated": False
                   }
                 }

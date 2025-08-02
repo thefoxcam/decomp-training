@@ -34,4 +34,9 @@ int weird_func(int a) {
 void call_weird_func(int a, int *b) {
     *b = weird_func(a);
 }
+
+void call_weird_func_2(int a, int *b) {
+    a = a + 2;
+    *b = weird_func(a);
+}
 #pragma pop
